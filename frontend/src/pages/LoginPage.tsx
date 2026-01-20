@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { Navigate, useNavigate } from 'react-router-dom'
+import GridPattern from '../components/GridPattern'
 import { supabase } from '../lib/supabaseClient'
 import { useAuth } from '../hooks/useAuth'
 
@@ -36,100 +37,67 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="grid min-h-screen lg:grid-cols-[1.1fr_0.9fr]">
-      <section className="relative flex flex-col justify-between border-b border-stroke bg-white/70 px-8 py-12 lg:border-b-0 lg:border-r">
-        <div className="space-y-6">
-          <span className="accent-pill">BRAIN CRM</span>
-          <h1 className="text-4xl font-display text-ink sm:text-5xl">
-            Operacao local focada em clientes, contratos e atendimento.
-          </h1>
-          <p className="text-base text-ink/70">
-            Um painel administrativo preparado para o MVP. Dados isolados por tenant,
-            com auditoria e fluxos alinhados ao schema brain.
-          </p>
-        </div>
-
-        <div className="mt-10 grid gap-4 text-sm text-ink/60 sm:grid-cols-2">
-          <div className="surface-panel p-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-ink/40">Seguranca</p>
-            <p className="mt-2 font-semibold text-ink">RLS e isolamento total</p>
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#F7F9FC] px-6 py-12">
+      <GridPattern className="text-ink/5" />
+      <form
+        onSubmit={handleSubmit}
+        className="surface-panel relative w-full max-w-md space-y-6 border border-accent/10 bg-white/90 p-8 shadow-[0_24px_70px_-50px_rgba(79,70,229,0.6)]"
+      >
+        <div className="flex flex-col items-center gap-3 text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl border border-accent/20 bg-accent/10">
+            <img src="/logo.png" alt="Meu Nome Ok" className="h-9 w-9 object-contain" />
           </div>
-          <div className="surface-panel p-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-ink/40">BFF</p>
-            <p className="mt-2 font-semibold text-ink">Operacoes admin centralizadas</p>
-          </div>
-          <div className="surface-panel p-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-ink/40">Chat & Email</p>
-            <p className="mt-2 font-semibold text-ink">Realtime + Inbucket local</p>
-          </div>
-          <div className="surface-panel p-4">
-            <p className="text-xs uppercase tracking-[0.2em] text-ink/40">Auditoria</p>
-            <p className="mt-2 font-semibold text-ink">Logs completos de acao</p>
-          </div>
-        </div>
-      </section>
-
-      <section className="flex items-center justify-center px-6 py-12">
-        <form
-          onSubmit={handleSubmit}
-          className="surface-panel w-full max-w-md space-y-6 p-8"
-        >
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-ink/40">Acesso</p>
-            <h2 className="text-2xl font-display text-ink">Entrar no painel</h2>
+            <p className="text-xs uppercase tracking-[0.35em] text-ink/45">Meu Nome Ok ADM</p>
+            <h2 className="mt-2 text-2xl font-display text-ink">Entrar no painel</h2>
           </div>
+        </div>
 
-          <div className="space-y-4">
-            <label className="block text-xs font-semibold uppercase tracking-[0.2em] text-ink/50">
-              Email
-              <input
-                type="email"
-                required
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                className="mt-2 w-full rounded-xl border border-stroke bg-white px-4 py-3 text-sm text-ink shadow-soft outline-none transition focus:border-ink"
-                placeholder="voce@empresa.com"
-              />
-            </label>
-            <label className="block text-xs font-semibold uppercase tracking-[0.2em] text-ink/50">
-              Senha
-              <input
-                type="password"
-                required
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                className="mt-2 w-full rounded-xl border border-stroke bg-white px-4 py-3 text-sm text-ink shadow-soft outline-none transition focus:border-ink"
-                placeholder="••••••••"
-              />
-            </label>
+        <div className="space-y-4">
+          <label className="block text-xs font-semibold uppercase tracking-[0.2em] text-ink/50">
+            Email
+            <input
+              type="email"
+              required
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              className="input-base mt-2 py-3"
+              placeholder="voce@empresa.com"
+            />
+          </label>
+          <label className="block text-xs font-semibold uppercase tracking-[0.2em] text-ink/50">
+            Senha
+            <input
+              type="password"
+              required
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              className="input-base mt-2 py-3"
+              placeholder="••••••••"
+            />
+          </label>
+        </div>
+
+        {error ? (
+          <div className="rounded-xl border border-accent/30 bg-accent/10 px-4 py-3 text-sm text-accent">
+            {error}
           </div>
+        ) : null}
 
-          {error ? (
-            <div className="rounded-xl border border-accent/30 bg-accent/10 px-4 py-3 text-sm text-accent">
-              {error}
-            </div>
-          ) : null}
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-xl bg-ink px-4 py-3 text-xs font-semibold uppercase tracking-[0.25em] text-white transition hover:opacity-90"
-          >
-            {loading ? 'Entrando...' : 'Entrar'}
-          </button>
-          <button
-            type="button"
-            className="w-full rounded-xl border border-stroke bg-white px-4 py-3 text-xs font-semibold uppercase tracking-[0.25em] text-ink/70"
-          >
-            Redefinir senha (mock)
-          </button>
-
-          <p className="text-xs text-ink/50">
-            Use um usuario criado pelo admin local. As credenciais padrao do seed
-            estao em supabase/seed.sql.
-          </p>
-        </form>
-      </section>
+        <button
+          type="submit"
+          disabled={loading}
+          className="btn-primary w-full rounded-xl px-4 py-3 text-xs font-semibold uppercase tracking-[0.25em]"
+        >
+          {loading ? 'Entrando...' : 'Entrar'}
+        </button>
+        <button
+          type="button"
+          className="btn-outline w-full rounded-xl px-4 py-3 text-xs font-semibold uppercase tracking-[0.25em]"
+        >
+          Redefinir senha
+        </button>
+      </form>
     </div>
   )
 }

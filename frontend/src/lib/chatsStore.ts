@@ -2,7 +2,7 @@ import { chatThreadsMock, type ChatThreadMock } from './mockData'
 
 const STORAGE_KEY = 'brain_chat_threads_mock'
 const STORAGE_VERSION_KEY = 'brain_chat_threads_version'
-const STORAGE_VERSION = '2026-01-13'
+const STORAGE_VERSION = '2026-01-18'
 
 function notify() {
   window.dispatchEvent(new Event('brain:chatsUpdated'))

@@ -1,17 +1,17 @@
-@import url('https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @config "../tailwind.config.ts";
 @import "tailwindcss";
 
 :root {
-  --paper: 248 243 234;
-  --surface: 255 250 244;
-  --ink: 27 27 27;
-  --stroke: 230 221 207;
-  --accent: 228 87 46;
-  --teal: 27 127 121;
-  --moss: 107 123 79;
-  --font-sans: "Space Grotesk";
-  --font-display: "Newsreader";
+  --paper: 238 242 247;
+  --surface: 255 255 255;
+  --ink: 15 15 15;
+  --stroke: 229 231 235;
+  --accent: 79 70 229;
+  --teal: 99 102 241;
+  --moss: 148 163 184;
+  --font-sans: "Inter";
+  --font-display: "Inter";
 }
 
 * {
@@ -23,11 +23,11 @@ body {
   min-height: 100vh;
   font-family: var(--font-sans), sans-serif;
   color: rgb(var(--ink) / 1);
-  background:
-    radial-gradient(1200px 600px at 10% -10%, rgb(var(--teal) / 0.22), transparent 60%),
-    radial-gradient(900px 500px at 110% 10%, rgb(var(--accent) / 0.18), transparent 55%),
-    linear-gradient(180deg, rgb(255 255 255 / 0.6) 0%, rgb(var(--paper) / 0.9) 60%, rgb(var(--paper) / 1) 100%);
-  background-attachment: fixed;
+  background: rgb(var(--paper) / 1);
+}
+
+body.modal-open .app-grid {
+  opacity: 0;
 }
 
 a {
@@ -42,21 +42,59 @@ a {
 @layer base {
   h1, h2, h3, h4 {
     font-family: var(--font-display), serif;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.01em;
   }
 
   p {
     line-height: 1.6;
   }
+
+  :where(button, input, select, textarea) {
+    transition: color 150ms ease, background-color 150ms ease, border-color 150ms ease;
+  }
+
+  :where(button, input, select, textarea):focus-visible {
+    outline: 2px solid rgb(var(--accent) / 0.4);
+    outline-offset: 2px;
+  }
 }
 
 @layer components {
   .surface-panel {
-    @apply border border-stroke shadow-soft rounded-2xl;
-    background-color: rgb(var(--surface) / 0.95);
+    @apply border border-stroke shadow-soft rounded-xl;
+    background-color: rgb(var(--surface) / 1);
   }
 
   .accent-pill {
-    @apply inline-flex items-center gap-2 rounded-full border border-stroke bg-white/70 px-3 py-1 text-xs uppercase tracking-[0.18em] text-ink/70;
+    @apply inline-flex items-center gap-2 rounded-full border border-stroke bg-white px-3 py-1 text-xs uppercase tracking-[0.18em] text-ink/70;
+  }
+
+  .btn-primary {
+    @apply bg-accent text-white border border-transparent shadow-soft hover:opacity-90;
+  }
+
+  .btn-outline {
+    @apply border border-stroke bg-white text-ink/70 hover:border-accent/30 hover:text-ink;
+  }
+
+  .input-base {
+    @apply w-full rounded-xl border border-stroke bg-white/80 px-4 py-2 text-sm text-ink shadow-soft outline-none focus:border-accent;
+  }
+}
+
+@layer utilities {
+  .animate-fade-in {
+    animation: fade-in 0.35s ease-out both;
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

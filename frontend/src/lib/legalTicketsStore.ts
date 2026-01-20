@@ -1,4 +1,4 @@
-import { legalTicketsMock, type LegalTicketMock } from './mockData'
+import { legalTicketsMock, type LegalTicketAttachment, type LegalTicketMock } from './mockData'
 import { appendCustomerTimeline } from './customersStore'
 
 const STORAGE_KEY = 'brain_legal_tickets_mock'
@@ -29,6 +29,7 @@ export function upsertLegalTicket(payload: {
   clienteNome: string
   message: string
   author: 'equipe' | 'juridico'
+  attachments?: LegalTicketAttachment[]
 }) {
   const now = new Date().toISOString().slice(0, 16).replace('T', ' ')
   const tickets = getLegalTickets()
@@ -38,6 +39,7 @@ export function upsertLegalTicket(payload: {
     const updated: LegalTicketMock = {
       ...existing,
       status: payload.author === 'juridico' ? 'respondido' : 'pendente',
+      archived: false,
       lastUpdate: now,
       messages: [
         ...existing.messages,
@@ -46,6 +48,7 @@ export function upsertLegalTicket(payload: {
           author: payload.author,
           body: payload.message,
           timestamp: now,
+          attachments: payload.attachments?.length ? payload.attachments : undefined,
         },
       ],
     }
@@ -77,6 +80,7 @@ export function upsertLegalTicket(payload: {
     clienteId: payload.clienteId,
     clienteNome: payload.clienteNome,
     status: payload.author === 'juridico' ? 'respondido' : 'pendente',
+    archived: false,
     lastUpdate: now,
     messages: [
       {
@@ -84,6 +88,7 @@ export function upsertLegalTicket(payload: {
         author: payload.author,
         body: payload.message,
         timestamp: now,
+        attachments: payload.attachments?.length ? payload.attachments : undefined,
       },
     ],
   }
@@ -107,4 +112,18 @@ export function upsertLegalTicket(payload: {
     )
   }
   return created
+}
+
+export function setTicketArchived(ticketId: string, archived: boolean) {
+  const now = new Date().toISOString().slice(0, 16).replace('T', ' ')
+  const tickets = getLegalTickets()
+  const existing = tickets.find((ticket) => ticket.id === ticketId)
+  if (!existing) return null
+  const updated: LegalTicketMock = {
+    ...existing,
+    archived,
+    lastUpdate: now,
+  }
+  saveLegalTickets(tickets.map((ticket) => (ticket.id === updated.id ? updated : ticket)))
+  return updated
 }

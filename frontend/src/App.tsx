@@ -10,6 +10,7 @@ import NotFoundPage from './pages/NotFoundPage'
 import ProfilePage from './pages/ProfilePage'
 import SupportPage from './pages/SupportPage'
 import TeamPage from './pages/TeamPage'
+import PromptsPage from './pages/PromptsPage'
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { session, loading } = useAuth()
@@ -49,6 +50,7 @@ export default function App() {
             <Route path="/app-access" element={<AppAccessPage />} />
             <Route path="/legal" element={<LegalPage />} />
             <Route path="/support" element={<SupportPage />} />
+            <Route path="/prompts" element={<PromptsPage />} />
             <Route path="/logs" element={<LogsPage />} />
             <Route path="/team" element={<TeamPage />} />
             <Route path="/profile" element={<Navigate to="/meu-perfil" replace />} />

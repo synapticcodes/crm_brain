@@ -28,6 +28,13 @@ export const navItems = [
     dotClass: 'bg-amber-500',
   },
   {
+    path: '/prompts',
+    label: 'Prompts',
+    hint: 'Assistentes',
+    accentClass: 'text-slate-700',
+    dotClass: 'bg-slate-500',
+  },
+  {
     path: '/logs',
     label: 'Logs',
     hint: 'Auditoria',

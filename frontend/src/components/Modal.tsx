@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { createPortal } from 'react-dom'
 
 interface ModalProps {
   open: boolean
@@ -23,20 +24,23 @@ export default function Modal({ open, title, onClose, children, size = 'lg' }: M
     if (open) {
       document.addEventListener('keydown', handleEscape)
       document.body.style.overflow = 'hidden'
+      document.body.classList.add('modal-open')
     }
 
     return () => {
       document.removeEventListener('keydown', handleEscape)
       document.body.style.overflow = ''
+      document.body.classList.remove('modal-open')
     }
   }, [open, onClose])
 
   if (!open) return null
+  if (typeof document === 'undefined') return null
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-10">
+  return createPortal(
+    <div className="fixed inset-0 z-[60] flex items-center justify-center px-4 py-10">
       <div
-        className="absolute inset-0 bg-black/30 backdrop-blur-sm"
+        className="absolute inset-0 bg-slate-900/60 backdrop-blur-md"
         role="presentation"
         onClick={onClose}
       />
@@ -52,6 +56,7 @@ export default function Modal({ open, title, onClose, children, size = 'lg' }: M
         </div>
         <div className="pt-6">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
