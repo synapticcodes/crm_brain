@@ -13,7 +13,8 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "nodemailer": "^7.0.12"
+    "nodemailer": "^7.0.12",
+    "openai": "^4.86.1"
   },
   "devDependencies": {
     "@types/cors": "^2.8.17",

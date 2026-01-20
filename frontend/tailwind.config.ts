@@ -18,8 +18,8 @@ export default {
         moss: 'rgb(var(--moss) / <alpha-value>)',
       },
       boxShadow: {
-        soft: '0 12px 30px rgba(15, 23, 42, 0.08)',
-        card: '0 18px 40px rgba(31, 41, 55, 0.12)',
+        soft: '0 6px 18px rgba(15, 23, 42, 0.08)',
+        card: '0 10px 24px rgba(15, 23, 42, 0.12)',
       },
     },
   },

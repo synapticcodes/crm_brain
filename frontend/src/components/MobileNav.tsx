@@ -13,7 +13,7 @@ export default function MobileNav() {
               [
                 'whitespace-nowrap rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] transition',
                 isActive
-                  ? 'border-ink bg-ink text-white'
+                  ? 'border-accent bg-accent text-white'
                   : 'border-transparent bg-white text-ink/70',
               ].join(' ')
             }

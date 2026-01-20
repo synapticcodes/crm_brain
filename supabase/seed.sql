@@ -19,6 +19,22 @@ VALUES
 ON CONFLICT (id) DO NOTHING;
 
 -- =====================================================
+-- 1.1. Create Contrato Templates
+-- =====================================================
+
+INSERT INTO brain.contrato_templates (
+  id, tenancy_id, produto, servico, metodo_pagamento, parcelas_min, parcelas_max, created_at
+)
+VALUES
+  ('10000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000001', 'Tudo em Dia a vista', 'Tudo em Dia a vista', 'pix/boleto/cartao', 1, 1, now()),
+  ('10000000-0000-0000-0000-000000000002', '00000000-0000-0000-0000-000000000001', 'Tudo em Dia 36x', 'Tudo em Dia 36x', 'boleto', 1, 36, now()),
+  ('10000000-0000-0000-0000-000000000003', '00000000-0000-0000-0000-000000000001', 'Tudo em Dia Cartao', 'Tudo em Dia Cartao', 'cartao', 1, 12, now()),
+  ('10000000-0000-0000-0000-000000000004', '00000000-0000-0000-0000-000000000002', 'Tudo em Dia a vista', 'Tudo em Dia a vista', 'pix/boleto/cartao', 1, 1, now()),
+  ('10000000-0000-0000-0000-000000000005', '00000000-0000-0000-0000-000000000002', 'Tudo em Dia 36x', 'Tudo em Dia 36x', 'boleto', 1, 36, now()),
+  ('10000000-0000-0000-0000-000000000006', '00000000-0000-0000-0000-000000000002', 'Tudo em Dia Cartao', 'Tudo em Dia Cartao', 'cartao', 1, 12, now())
+ON CONFLICT (id) DO NOTHING;
+
+-- =====================================================
 -- 2. Create Auth User
 -- =====================================================
 

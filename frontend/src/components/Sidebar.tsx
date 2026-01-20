@@ -7,15 +7,15 @@ export default function Sidebar() {
   const email = session?.user?.email ?? 'usuario@local.test'
 
   return (
-    <aside className="h-screen w-72 border-r border-stroke/80 bg-white/70 backdrop-blur-xl">
+    <aside className="h-screen w-72 border-r border-stroke/80 bg-white/90 backdrop-blur-xl">
       <div className="flex h-full flex-col px-6 py-8">
         <div className="flex items-center gap-3">
-          <div className="grid h-11 w-11 place-items-center rounded-2xl bg-ink text-white shadow-card">
-            <span className="text-lg font-display">B</span>
+          <div className="grid h-11 w-11 place-items-center rounded-xl border border-accent/20 bg-accent/10 text-accent">
+            <img src="/logo.png" alt="Meu Nome Ok" className="h-7 w-7 object-contain" />
           </div>
           <div>
-            <p className="text-xs uppercase tracking-[0.3em] text-ink/50">BRAIN</p>
-            <p className="text-lg font-display">Controle Local</p>
+            <p className="text-xs uppercase tracking-[0.3em] text-ink/50">Meu Nome Ok</p>
+            <p className="text-lg font-display">Administrativo</p>
           </div>
         </div>
 
@@ -26,10 +26,10 @@ export default function Sidebar() {
               to={item.path}
               className={({ isActive }) =>
                 [
-                  'group flex items-center justify-between rounded-2xl border px-4 py-3 transition-all',
+                  'group flex items-center justify-between rounded-xl border px-4 py-3 transition-all',
                   isActive
-                    ? 'border-ink/70 bg-ink text-white shadow-card'
-                    : 'border-transparent bg-white/60 text-ink/70 hover:border-stroke hover:bg-white',
+                    ? 'border-accent/30 bg-accent/10 text-ink shadow-soft'
+                    : 'border-transparent bg-white/80 text-ink/70 hover:border-stroke hover:bg-white',
                 ].join(' ')
               }
             >
@@ -37,7 +37,7 @@ export default function Sidebar() {
                 <span className={`h-2 w-2 rounded-full ${item.dotClass}`} />
                 <div>
                   <p className="text-sm font-semibold">{item.label}</p>
-                  <p className="text-[11px] uppercase tracking-[0.2em] opacity-70">{item.hint}</p>
+                  <p className="text-[11px] uppercase tracking-[0.2em] text-ink/40">{item.hint}</p>
                 </div>
               </div>
               <span className={`text-xs font-semibold ${item.accentClass}`}>›</span>
@@ -50,7 +50,7 @@ export default function Sidebar() {
           <p className="mt-1 text-sm font-semibold text-ink">{email}</p>
           <button
             onClick={signOut}
-            className="mt-3 w-full rounded-xl border border-ink/20 bg-ink px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white transition hover:opacity-90"
+            className="btn-primary mt-3 w-full rounded-xl px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em]"
           >
             Sair
           </button>

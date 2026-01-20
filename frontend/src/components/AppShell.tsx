@@ -2,6 +2,7 @@ import { Outlet } from 'react-router-dom'
 import Sidebar from './Sidebar'
 import TopBar from './TopBar'
 import MobileNav from './MobileNav'
+import GridPattern from './GridPattern'
 import { useEffect, useState } from 'react'
 
 export default function AppShell() {
@@ -77,8 +78,9 @@ export default function AppShell() {
         <div className="flex min-h-screen w-full flex-1 flex-col">
           <TopBar />
           <MobileNav />
-          <main className="flex-1 px-6 pb-12">
-            <div className="mx-auto flex w-full max-w-6xl flex-col gap-10">
+          <main className="relative flex-1 bg-slate-100/70 px-4 pb-12 xl:px-8">
+            <GridPattern className="app-grid text-slate-300/70" width={48} height={48} />
+            <div className="relative mx-auto flex w-full max-w-[1440px] flex-col gap-10 animate-fade-in">
               <Outlet />
             </div>
           </main>

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import PageHeader from '../components/PageHeader'
 import { useAuth } from '../hooks/useAuth'
+import { isSoundEnabled, setSoundEnabled } from '../lib/soundEffects'
 import { supabase } from '../lib/supabaseClient'
 
 type StatusTone = 'success' | 'error' | 'info'
@@ -13,6 +14,7 @@ export default function ProfilePage() {
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
   const [status, setStatus] = useState<StatusState | null>(null)
+  const [soundEnabled, setSoundEnabledState] = useState(true)
 
   const initials = useMemo(() => email.slice(0, 1).toUpperCase(), [email])
 
@@ -21,6 +23,10 @@ export default function ProfilePage() {
     const stored = window.localStorage.getItem(`brain_profile_avatar_${email}`)
     if (stored) setAvatarPreview(stored)
   }, [email])
+
+  useEffect(() => {
+    setSoundEnabledState(isSoundEnabled())
+  }, [])
 
   function handleAvatarChange(file: File | null) {
     if (!file) return
@@ -57,6 +63,17 @@ export default function ProfilePage() {
     setPassword('')
     setConfirmPassword('')
     setStatus({ message: 'Senha atualizada com sucesso.', tone: 'success' })
+    setTimeout(() => setStatus(null), 2000)
+  }
+
+  function handleSoundToggle() {
+    const next = !soundEnabled
+    setSoundEnabledState(next)
+    setSoundEnabled(next)
+    setStatus({
+      message: next ? 'Sons ativados.' : 'Sons desativados.',
+      tone: 'info',
+    })
     setTimeout(() => setStatus(null), 2000)
   }
 
@@ -118,7 +135,7 @@ export default function ProfilePage() {
                 type="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                className="mt-2 w-full rounded-xl border border-stroke bg-white px-4 py-3 text-sm text-ink shadow-soft outline-none focus:border-ink"
+                className="input-base mt-2 py-3"
                 placeholder="Digite a nova senha"
               />
             </label>
@@ -128,20 +145,40 @@ export default function ProfilePage() {
                 type="password"
                 value={confirmPassword}
                 onChange={(event) => setConfirmPassword(event.target.value)}
-                className="mt-2 w-full rounded-xl border border-stroke bg-white px-4 py-3 text-sm text-ink shadow-soft outline-none focus:border-ink"
+                className="input-base mt-2 py-3"
                 placeholder="Repita a nova senha"
               />
             </label>
             <button
               onClick={handlePasswordChange}
-              className="w-full rounded-full bg-ink px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white"
+              className="btn-primary w-full rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em]"
             >
               Atualizar senha
             </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="surface-panel p-6">
+        <h3 className="text-xl font-display text-ink">Preferências</h3>
+        <div className="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-3xl border border-stroke bg-white/80 p-6">
+          <div>
+            <p className="text-sm font-semibold text-ink">Notificações sonoras</p>
             <p className="text-xs text-ink/50">
-              Alteracao de senha usa o fluxo do Supabase Auth nesta versao local.
+              Alertas de chat, tickets jurídicos e status de email.
             </p>
           </div>
+          <button
+            type="button"
+            onClick={handleSoundToggle}
+            className={`rounded-full border px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] ${
+              soundEnabled
+                ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                : 'border-stroke bg-white text-ink/60'
+            }`}
+          >
+            {soundEnabled ? 'Sons ativados' : 'Sons desativados'}
+          </button>
         </div>
       </div>
     </div>
