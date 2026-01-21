@@ -1497,10 +1497,10 @@ export const chatThreadsMock: ChatThreadMock[] = [
     statusPagamento: 'Em dia',
     lastInteraction: '2025-02-25 09:12',
     clienteOnline: true,
-    atendenteNome: 'Livia Ramos',
+    atendenteNome: 'Comercial Meu Nome OK',
     atendenteOnline: true,
     activeProtocol: true,
-    ownerEmail: 'aline@local.test',
+    ownerEmail: 'comercial@meunomeok.com',
     messages: [
       {
         id: 'C-1',
@@ -1593,10 +1593,10 @@ export const chatThreadsMock: ChatThreadMock[] = [
     statusPagamento: 'Inadimplente',
     lastInteraction: '2025-02-24 18:32',
     clienteOnline: false,
-    atendenteNome: 'Guilherme Pires',
+    atendenteNome: 'Comercial Meu Nome OK',
     atendenteOnline: true,
     activeProtocol: true,
-    ownerEmail: 'diego@local.test',
+    ownerEmail: 'comercial@meunomeok.com',
     messages: [
       {
         id: 'C-3',
@@ -1664,10 +1664,10 @@ export const chatThreadsMock: ChatThreadMock[] = [
     statusPagamento: 'Pendente',
     lastInteraction: '2025-02-21 12:10',
     clienteOnline: false,
-    atendenteNome: 'Roberta Lins',
-    atendenteOnline: false,
+    atendenteNome: 'Comercial Meu Nome OK',
+    atendenteOnline: true,
     activeProtocol: false,
-    ownerEmail: 'rafaela@local.test',
+    ownerEmail: 'comercial@meunomeok.com',
     messages: [
       {
         id: 'C-4',
@@ -2105,6 +2105,17 @@ export const logsMock: LogMock[] = [
 ]
 
 export const teamMock: TeamMemberMock[] = [
+  {
+    id: 'U-0',
+    nome: 'Comercial Meu Nome OK',
+    email: 'comercial@meunomeok.com',
+    telefone: '(11) 90000-0000',
+    avatarUrl: 'https://i.pravatar.cc/120?img=68',
+    role: 'admin',
+    status: 'online',
+    lastActivity: 'Agora',
+    ipAddress: '187.10.120.90',
+  },
   {
     id: 'U-1',
     nome: 'Aline Costa',

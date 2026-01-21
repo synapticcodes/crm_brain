@@ -54,6 +54,10 @@ app.post('/admin/invite', requireAuth, requireAdmin, async (req, res) => {
     return res.status(400).json({ error: 'email, role, and tenancy_id are required' });
   }
 
+  if (role !== 'admin' && role !== 'administrativo') {
+    return res.status(400).json({ error: 'role must be admin or administrativo' });
+  }
+
   const context = getAuthContext(res);
 
   if (tenancy_id !== context.tenancyId) {
@@ -464,7 +468,7 @@ app.post('/chat/assist', requireAuth, async (req, res) => {
   return res.status(400).json({ error: 'Unknown action' });
 });
 
-app.post('/team/assist', requireAuth, async (req, res) => {
+app.post('/team/assist', requireAuth, requireAdmin, async (req, res) => {
   const { action, query, member, metrics, team } = req.body || {};
 
   if (!action) {
@@ -500,7 +504,7 @@ app.post('/team/assist', requireAuth, async (req, res) => {
   }
 });
 
-app.post('/prompts/preview', requireAuth, async (req, res) => {
+app.post('/prompts/preview', requireAuth, requireAdmin, async (req, res) => {
   const { system_prompt, user_template, variables } = req.body || {};
 
   if (!system_prompt || !user_template) {

@@ -1,4 +1,15 @@
-export const navItems = [
+import type { UserRole } from './roles'
+
+type NavItem = {
+  path: string
+  label: string
+  hint: string
+  accentClass: string
+  dotClass: string
+  roles?: UserRole[]
+}
+
+const navItems: NavItem[] = [
   {
     path: '/customers',
     label: 'Clientes',
@@ -33,6 +44,7 @@ export const navItems = [
     hint: 'Assistentes',
     accentClass: 'text-slate-700',
     dotClass: 'bg-slate-500',
+    roles: ['admin'],
   },
   {
     path: '/logs',
@@ -47,5 +59,11 @@ export const navItems = [
     hint: 'Perfis e convites',
     accentClass: 'text-stone-700',
     dotClass: 'bg-stone-500',
+    roles: ['admin'],
   },
 ]
+
+export function getNavItems(role: UserRole | null): NavItem[] {
+  const effectiveRole: UserRole = role ?? 'administrativo'
+  return navItems.filter((item) => !item.roles || item.roles.includes(effectiveRole))
+}

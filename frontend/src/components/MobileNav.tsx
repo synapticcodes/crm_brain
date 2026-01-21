@@ -1,7 +1,11 @@
 import { NavLink } from 'react-router-dom'
-import { navItems } from '../lib/navigation'
+import { getNavItems } from '../lib/navigation'
+import { useAuth } from '../hooks/useAuth'
 
 export default function MobileNav() {
+  const { role } = useAuth()
+  const navItems = getNavItems(role)
+
   return (
     <div className="lg:hidden px-6 pb-6">
       <div className="flex gap-2 overflow-x-auto rounded-2xl bg-white/70 p-2 shadow-soft">

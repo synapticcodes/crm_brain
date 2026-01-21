@@ -1,10 +1,13 @@
 import { NavLink } from 'react-router-dom'
-import { navItems } from '../lib/navigation'
+import { getNavItems } from '../lib/navigation'
+import { roleLabel } from '../lib/roles'
 import { useAuth } from '../hooks/useAuth'
 
 export default function Sidebar() {
-  const { signOut, session } = useAuth()
+  const { signOut, session, role, roleLoading } = useAuth()
   const email = session?.user?.email ?? 'usuario@local.test'
+  const navItems = getNavItems(role)
+  const displayRole = roleLoading ? 'Carregando' : roleLabel(role)
 
   return (
     <aside className="h-screen w-72 border-r border-stroke/80 bg-white/90 backdrop-blur-xl">
@@ -15,7 +18,7 @@ export default function Sidebar() {
           </div>
           <div>
             <p className="text-xs uppercase tracking-[0.3em] text-ink/50">Meu Nome Ok</p>
-            <p className="text-lg font-display">Administrativo</p>
+            <p className="text-lg font-display">{displayRole}</p>
           </div>
         </div>
 

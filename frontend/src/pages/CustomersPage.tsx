@@ -68,6 +68,89 @@ const DATE_FILTERS = [
   { value: 'custom', label: 'Personalizado' },
 ] as const
 
+const BANK_CREDITORS = [
+  'Caixa Economica',
+  'Banco do Brasil',
+  'Itau Unibanco',
+  'Bradesco',
+  'Santander Brasil',
+  'Banco Safra',
+  'BTG Pactual',
+  'Banco Inter',
+  'Banco Original',
+  'Banco Pan',
+  'Banco Votorantim',
+  'Banco C6',
+  'Banco Neon',
+  'Banco BMG',
+  'Banco Daycoval',
+  'Banco Sofisa',
+  'Banco Topazio',
+  'Banco Pine',
+  'Banco Modal',
+  'Banco ABC Brasil',
+  'Banco Alfa',
+  'Banco Arbi',
+  'Banco BS2',
+  'Banco BV',
+  'Banco Capital',
+  'Banco Credit Suisse',
+  'Banco Fator',
+  'Banco Fibra',
+  'Banco Indusval',
+  'Banco J.P. Morgan',
+  'Banco Luso Brasileiro',
+  'Banco Mercantil do Brasil',
+  'Banco Rendimento',
+  'Banco Renner',
+  'Banco Crefisa',
+  'Banco Cetelem',
+  'Banco BOCOM BBM',
+  'Banco BRB',
+  'Banco do Nordeste',
+  'Banco da Amazonia',
+  'Banrisul',
+  'Banese',
+  'Banestes',
+  'Banpara',
+  'Banco Agibank',
+  'Banco Sicoob',
+  'Banco Sicredi',
+  'Banco Original do Agronegocio',
+  'Banco Western Union',
+  'Banco Ourinvest',
+  'Banco Digimais',
+  'Banco Next',
+  'Banco PagBank',
+  'Banco Stone',
+  'Banco XP',
+  'Banco Nubank',
+] as const
+
+function hashString(value: string) {
+  let hash = 0
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash * 31 + value.charCodeAt(i)) >>> 0
+  }
+  return hash
+}
+
+function buildCreditorBanks(customerId: string, count: number) {
+  if (count <= 0) return []
+  const pool = [...BANK_CREDITORS]
+  const selected: string[] = []
+  let seed = hashString(customerId) || 1
+  for (let i = 0; i < count; i += 1) {
+    if (pool.length === 0) {
+      pool.push(...BANK_CREDITORS)
+    }
+    seed = (seed * 1103515245 + 12345) >>> 0
+    const index = seed % pool.length
+    selected.push(pool.splice(index, 1)[0])
+  }
+  return selected
+}
+
 function buildTimelineItem(title: string, description: string, type: CustomerTimelineItem['type']) {
   const now = new Date()
   const timestamp = now.toISOString().slice(0, 16).replace('T', ' ')
@@ -324,6 +407,11 @@ export default function CustomersPage() {
   const customersRef = useRef(customers)
   const pendingFiles = selectedCustomer?.files.filter((file) => file.status === 'pendente') ?? []
   const approvedFiles = selectedCustomer?.files.filter((file) => file.status === 'aprovado') ?? []
+  const creditorBanks = useMemo(() => {
+    if (!selectedCustomer) return []
+    const count = Math.max(0, Number(selectedCustomer.numeroCredores) || 0)
+    return buildCreditorBanks(selectedCustomer.id, count)
+  }, [selectedCustomer?.id, selectedCustomer?.numeroCredores])
 
   useEffect(() => {
     setTimelineVisibleCount(20)
@@ -1232,6 +1320,11 @@ export default function CustomersPage() {
                   <div className="rounded-xl border border-stroke bg-white/80 px-3 py-2">
                     Financiamento veiculo: {selectedCustomer.financiamentoVeiculo ? 'Sim' : 'Nao'}
                   </div>
+                  {creditorBanks.map((bank, index) => (
+                    <div key={`${selectedCustomer.id}-bank-${index}`} className="rounded-xl border border-stroke bg-white/80 px-3 py-2">
+                      Banco {index + 1}: {bank}
+                    </div>
+                  ))}
                 </div>
               </section>
 

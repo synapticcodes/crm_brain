@@ -66,7 +66,19 @@ export default function SupportPage() {
   const [threads, setThreads] = useState<ChatThreadMock[]>(() => getChatThreads())
   const [emails, setEmails] = useState<EmailMock[]>(emailsMock)
   const [selectedThreadId, setSelectedThreadId] = useState(threads[0]?.id ?? null)
-  const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(null)
+  function normalizeEmail(value: string | null | undefined) {
+    if (!value) return ''
+    const trimmed = value.trim().toLowerCase()
+    return trimmed.startsWith('comerical@')
+      ? trimmed.replace('comerical@', 'comercial@')
+      : trimmed
+  }
+
+  const fallbackAdminEmail = useMemo(
+    () => teamMock.find((member) => member.role === 'admin')?.email ?? null,
+    []
+  )
+  const [currentUserEmail, setCurrentUserEmail] = useState<string | null>(fallbackAdminEmail)
   const [assigneeFilter, setAssigneeFilter] = useState('all')
   const [message, setMessage] = useState('')
   const [emailBody, setEmailBody] = useState('')
@@ -164,6 +176,8 @@ export default function SupportPage() {
   const [assistantPromptTone, setAssistantPromptTone] = useState('Profissional')
   const [assistantPromptToneChoice, setAssistantPromptToneChoice] = useState('Profissional')
   const [assistantPromptCustomTone, setAssistantPromptCustomTone] = useState('')
+  const [transferMenuOpen, setTransferMenuOpen] = useState(false)
+  const transferMenuRef = useRef<HTMLDivElement | null>(null)
   const [chatTemplates, setChatTemplates] = useState(() => {
     if (typeof window === 'undefined') return CHAT_TEMPLATES
     const raw = window.localStorage.getItem(CHAT_TEMPLATE_STORAGE_KEY)
@@ -179,31 +193,32 @@ export default function SupportPage() {
   const [chatTemplateTitle, setChatTemplateTitle] = useState('')
   const [chatTemplateBody, setChatTemplateBody] = useState('')
   const isSyncingThreadsRef = useRef(false)
+  const currentUserEmailNormalized = normalizeEmail(currentUserEmail)
 
   useEffect(() => {
-    let mounted = true
-    supabase.auth.getUser().then(({ data }) => {
-      if (!mounted) return
-      const fallbackAdmin = teamMock.find((member) => member.role === 'admin')?.email ?? null
-      setCurrentUserEmail(data.user?.email ?? fallbackAdmin)
-    })
-    return () => {
-      mounted = false
+    if (session?.user?.email) {
+      setCurrentUserEmail(session.user.email)
+      return
     }
-  }, [])
+    setCurrentUserEmail(fallbackAdminEmail)
+  }, [session?.user?.email, fallbackAdminEmail])
 
   const currentUserName = useMemo(() => {
     if (!currentUserEmail) return 'Atendente'
-    const matched = teamMock.find((member) => member.email === currentUserEmail)
+    const matched = teamMock.find(
+      (member) => normalizeEmail(member.email) === currentUserEmailNormalized
+    )
     return matched?.nome ?? 'Atendente'
-  }, [currentUserEmail])
+  }, [currentUserEmail, currentUserEmailNormalized])
 
   const isAdmin = useMemo(() => {
     if (!currentUserEmail) return false
-    const matched = teamMock.find((member) => member.email === currentUserEmail)
+    const matched = teamMock.find(
+      (member) => normalizeEmail(member.email) === currentUserEmailNormalized
+    )
     if (!matched) return true
     return matched.role === 'admin'
-  }, [currentUserEmail])
+  }, [currentUserEmail, currentUserEmailNormalized])
 
   useEffect(() => {
     if (!currentUserEmail || isAdmin) return
@@ -242,6 +257,28 @@ export default function SupportPage() {
       window.removeEventListener('storage', syncThreads)
     }
   }, [])
+
+  useEffect(() => {
+    if (!transferMenuOpen) return
+    function handleClose(event: MouseEvent) {
+      const target = event.target as HTMLElement | null
+      if (transferMenuRef.current?.contains(target)) return
+      setTransferMenuOpen(false)
+    }
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') setTransferMenuOpen(false)
+    }
+    window.addEventListener('mousedown', handleClose)
+    window.addEventListener('keydown', handleEscape)
+    return () => {
+      window.removeEventListener('mousedown', handleClose)
+      window.removeEventListener('keydown', handleEscape)
+    }
+  }, [transferMenuOpen])
+
+  useEffect(() => {
+    setTransferMenuOpen(false)
+  }, [selectedThreadId])
 
   const filteredThreads = useMemo(() => {
     const normalized = chatQuery.trim().toLowerCase()
@@ -289,7 +326,7 @@ export default function SupportPage() {
             : assigneeFilter === 'unassigned'
             ? !thread.ownerEmail
             : thread.ownerEmail === assigneeFilter
-          : thread.ownerEmail === currentUserEmail
+          : normalizeEmail(thread.ownerEmail) === currentUserEmailNormalized
 
         return matchesQuery && matchesDate && matchesStatus && matchesAssignee
       })
@@ -315,6 +352,7 @@ export default function SupportPage() {
     if (!selectedThread) return 'pendente'
     return getCustomers().find((customer) => customer.id === selectedThread.clienteId)?.appStatus ?? 'pendente'
   }, [selectedThread, profileCustomerVersion])
+  const isChatUnavailable = selectedAppStatus === 'pendente'
 
   const sentEmails = useMemo(() => emails.filter((email) => email.status === 'enviado'), [emails])
   const receivedEmails = useMemo(() => emails.filter((email) => email.status === 'recebido'), [emails])
@@ -688,6 +726,11 @@ export default function SupportPage() {
 
   function handleSendMessage() {
     if (!selectedThread || !message.trim()) return
+    if (isChatUnavailable) {
+      setChatError('App pendente. Chat indisponivel.')
+      setTimeout(() => setChatError(''), 2500)
+      return
+    }
     const now = new Date().toISOString().slice(0, 16).replace('T', ' ')
     updateChatThread(selectedThread.id, (thread) => ({
       ...thread,
@@ -717,6 +760,11 @@ export default function SupportPage() {
 
   async function handleUpload(kind: 'imagem' | 'arquivo' | 'audio', file: File | null) {
     if (!selectedThread || !file) return
+    if (isChatUnavailable) {
+      setChatError('App pendente. Chat indisponivel.')
+      setTimeout(() => setChatError(''), 2500)
+      return
+    }
     const now = new Date().toISOString().slice(0, 16).replace('T', ' ')
     const readFile = (inputFile: File) =>
       new Promise<string | undefined>((resolve) => {
@@ -752,6 +800,11 @@ export default function SupportPage() {
 
   async function toggleRecording() {
     if (!selectedThread) return
+    if (isChatUnavailable) {
+      setChatError('App pendente. Chat indisponivel.')
+      setTimeout(() => setChatError(''), 2500)
+      return
+    }
     if (isRecording && recorderRef.current) {
       recorderRef.current.stop()
       return
@@ -1065,7 +1118,7 @@ export default function SupportPage() {
   function handleInitiateChat(thread: ChatThreadMock) {
     const customers = getCustomers()
     const customer = customers.find((item) => item.id === thread.clienteId)
-    if (customer && customer.appStatus !== 'liberado') {
+    if (customer && customer.appStatus === 'pendente') {
       setChatError('Cliente ainda nao se cadastrou no app.')
       setTimeout(() => setChatError(''), 2500)
       return
@@ -1127,7 +1180,7 @@ export default function SupportPage() {
     const customers = getCustomers()
     const customer = customers.find((item) => item.id === selectedCustomerId)
     if (!customer) return
-    if (customer.appStatus !== 'liberado') {
+    if (customer.appStatus === 'pendente') {
       setChatError('Cliente ainda nao se cadastrou no app.')
       setTimeout(() => setChatError(''), 2500)
       return
@@ -1173,6 +1226,45 @@ export default function SupportPage() {
     setSelectedThreadId(newThread.id)
     setNewChatQuery('')
     setSelectedCustomerId('')
+  }
+
+  function handleTransferThread(threadId: string, nextOwnerEmail: string) {
+    if (!currentUserEmail) return
+    const nextOwner = teamMock.find((member) => member.email === nextOwnerEmail)
+    if (!nextOwner) return
+    const thread = threads.find((item) => item.id === threadId)
+    if (!thread || !canTransferThread(thread)) return
+    updateChatThread(threadId, (item) => ({
+      ...item,
+      ownerEmail: nextOwnerEmail,
+      atendenteNome: nextOwner.nome,
+      atendenteOnline: nextOwner.status === 'online',
+    }))
+    const updatedThreads = getChatThreads()
+    setThreads(updatedThreads)
+    setTransferMenuOpen(false)
+    if (!isAdmin && threadId === selectedThreadId && nextOwnerEmail !== currentUserEmail) {
+      const fallback = updatedThreads.find((item) => item.ownerEmail === currentUserEmail)
+      setSelectedThreadId(fallback?.id ?? null)
+    }
+    setToast({ message: `Chat transferido para ${nextOwner.nome}.`, tone: 'success' })
+    setTimeout(() => setToast(null), 2000)
+  }
+
+  function canTransferThread(thread: ChatThreadMock) {
+    if (isAdmin) return true
+    if (!currentUserEmailNormalized || !thread.ownerEmail) return false
+    return normalizeEmail(thread.ownerEmail) === currentUserEmailNormalized
+  }
+
+  function handleToggleTransferMenu() {
+    if (!selectedThread) return
+    if (!canTransferThread(selectedThread)) {
+      setToast({ message: 'Somente admin ou dono do chat pode transferir.', tone: 'error' })
+      setTimeout(() => setToast(null), 2000)
+      return
+    }
+    setTransferMenuOpen((prev) => !prev)
   }
 
   function exportThread(thread: ChatThreadMock) {
@@ -1726,6 +1818,11 @@ export default function SupportPage() {
                       {chatError}
                     </div>
                   ) : null}
+                  {isChatUnavailable ? (
+                    <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-2 text-xs text-amber-700">
+                      App pendente. Chat indisponivel.
+                    </div>
+                  ) : null}
                   <textarea
                     value={message}
                     onChange={(event) => setMessage(event.target.value)}
@@ -1742,7 +1839,8 @@ export default function SupportPage() {
                     }}
                     rows={3}
                     placeholder="Escreva para o cliente..."
-                    className="w-full rounded-2xl border border-stroke bg-white/80 px-4 py-3 text-sm shadow-soft outline-none focus:border-accent"
+                    disabled={isChatUnavailable}
+                    className="w-full rounded-2xl border border-stroke bg-white/80 px-4 py-3 text-sm shadow-soft outline-none focus:border-accent disabled:cursor-not-allowed disabled:opacity-60"
                   />
                   {showTemplateMenu ? (
                     <div className="rounded-2xl border border-stroke bg-white/90 p-3 text-xs text-ink/70">
@@ -1773,25 +1871,32 @@ export default function SupportPage() {
                   <div className="flex flex-wrap items-center gap-3">
                     <button
                       onClick={handleSendMessage}
-                      className="rounded-full bg-accent px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white"
+                      disabled={isChatUnavailable}
+                      className="rounded-full bg-accent px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       Enviar mensagem
                     </button>
-                    <label className="rounded-full border border-stroke bg-white px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink/70">
+                    <label
+                      className={`rounded-full border border-stroke bg-white px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink/70 ${
+                        isChatUnavailable ? 'cursor-not-allowed opacity-60' : ''
+                      }`}
+                    >
                       Upload arquivo
                       <input
                         type="file"
                         className="hidden"
+                        disabled={isChatUnavailable}
                         onChange={(event) => handleUpload('arquivo', event.target.files?.[0] ?? null)}
                       />
                     </label>
                     <button
                       onClick={toggleRecording}
+                      disabled={isChatUnavailable}
                       className={`rounded-full border px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] ${
                         isRecording
                           ? 'border-rose-300 bg-rose-500 text-white'
                           : 'border-stroke bg-white text-ink/70'
-                      }`}
+                      } disabled:cursor-not-allowed disabled:opacity-60`}
                       type="button"
                     >
                       {isRecording ? 'Gravando...' : 'Audio'}
@@ -1799,7 +1904,8 @@ export default function SupportPage() {
                     <div className="relative" ref={emojiPickerRef}>
                       <button
                         onClick={() => setShowEmojiPicker((prev) => !prev)}
-                        className="rounded-full border border-stroke bg-white px-3 py-2 text-[12px] font-semibold uppercase tracking-[0.2em] text-ink/70"
+                        disabled={isChatUnavailable}
+                        className="rounded-full border border-stroke bg-white px-3 py-2 text-[12px] font-semibold uppercase tracking-[0.2em] text-ink/70 disabled:cursor-not-allowed disabled:opacity-60"
                         aria-label="Selecionar emoji"
                         type="button"
                       >
@@ -1829,29 +1935,32 @@ export default function SupportPage() {
                     </div>
                     <button
                       onClick={() => setTemplateModalOpen(true)}
-                      className="rounded-full border border-stroke bg-white px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink/70"
+                      disabled={isChatUnavailable}
+                      className="rounded-full border border-stroke bg-white px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink/70 disabled:cursor-not-allowed disabled:opacity-60"
                       type="button"
                     >
                       Criar template
                     </button>
                     <button
                       onClick={() => setShowTemplateSelect((prev) => !prev)}
+                      disabled={isChatUnavailable}
                       className={`rounded-full border px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] ${
                         showTemplateSelect
                           ? 'border-accent bg-accent/10 text-accent'
                           : 'border-stroke bg-white text-ink/70'
-                      }`}
+                      } disabled:cursor-not-allowed disabled:opacity-60`}
                       type="button"
                     >
                       Template
                     </button>
                     <button
                       onClick={() => setShowSearchBar((prev) => !prev)}
+                      disabled={isChatUnavailable}
                       className={`rounded-full border px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] ${
                         showSearchBar
                           ? 'border-accent bg-accent/10 text-accent'
                           : 'border-stroke bg-white text-ink/70'
-                      }`}
+                      } disabled:cursor-not-allowed disabled:opacity-60`}
                       type="button"
                     >
                       Pesquisar
@@ -1868,6 +1977,7 @@ export default function SupportPage() {
                       setMessage(template.body.replace('{nome}', selectedThread.clienteNome))
                       setShowTemplateSelect(false)
                     }}
+                    disabled={isChatUnavailable}
                     className="rounded-full border border-stroke bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-ink/70"
                   >
                     <option value="">Templates rapidos</option>
@@ -1879,7 +1989,7 @@ export default function SupportPage() {
                   </select>
                 ) : null}
                   <p className="text-xs text-ink/50">Enter envia · Shift+Enter quebra linha.</p>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     {selectedThread.activeProtocol ? (
                       <button
                         onClick={() => handleCloseChat(selectedThread)}
@@ -1890,11 +2000,61 @@ export default function SupportPage() {
                     ) : (
                       <button
                         onClick={() => handleInitiateChat(selectedThread)}
-                        className="rounded-full border border-emerald-300 bg-emerald-500 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-white shadow-soft hover:bg-emerald-600"
+                        disabled={isChatUnavailable}
+                        className="rounded-full border border-emerald-300 bg-emerald-500 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-white shadow-soft hover:bg-emerald-600 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         Iniciar chat
                       </button>
                     )}
+                    <div className="relative" ref={transferMenuRef}>
+                      <button
+                        onClick={handleToggleTransferMenu}
+                        className={`rounded-full border px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] ${
+                          canTransferThread(selectedThread)
+                            ? 'border-stroke bg-white text-ink/70 hover:border-accent/50'
+                            : 'cursor-not-allowed border-stroke bg-white text-ink/40'
+                        }`}
+                        type="button"
+                      >
+                        Transferir
+                      </button>
+                      {transferMenuOpen ? (
+                        <div className="absolute left-0 bottom-full mb-2 w-64 rounded-2xl border border-stroke bg-white/95 p-2 text-ink shadow-soft">
+                          <p className="px-3 pt-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink/50">
+                            Transferir para
+                          </p>
+                          <div className="mt-1 space-y-1">
+                            {teamMock
+                              .filter((member) => normalizeEmail(member.email) !== currentUserEmailNormalized)
+                              .map((member) => (
+                                <button
+                                  key={member.id}
+                                  onClick={() => handleTransferThread(selectedThread.id, member.email)}
+                                  className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs text-ink hover:bg-stone-100"
+                                  type="button"
+                                >
+                                  <span className="flex items-center gap-2">
+                                    <span
+                                      className={`h-2 w-2 rounded-full ${
+                                        member.status === 'online' ? 'bg-emerald-500' : 'bg-stone-400'
+                                      }`}
+                                    />
+                                    {member.nome}
+                                  </span>
+                                  <span className="text-[10px] text-ink/40">{member.role}</span>
+                                </button>
+                              ))}
+                            {teamMock.filter(
+                              (member) => normalizeEmail(member.email) !== currentUserEmailNormalized
+                            ).length === 0 ? (
+                              <div className="px-3 py-2 text-xs text-ink/60">
+                                Nenhum usuario disponivel.
+                              </div>
+                            ) : null}
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
               </>
@@ -3283,6 +3443,7 @@ export default function SupportPage() {
           </div>
         </div>
       ) : null}
+
     </div>
   )
 }
