@@ -151,6 +151,79 @@ function buildCreditorBanks(customerId: string, count: number) {
   return selected
 }
 
+function digitsOnly(value: string) {
+  return value.replace(/\D/g, '')
+}
+
+function buildPhoneNumber(seed: number, areaCode: string) {
+  const rest = String(seed % 100000000).padStart(8, '0')
+  return `(${areaCode}) 9${rest.slice(0, 4)}-${rest.slice(4)}`
+}
+
+function buildWhatsappNumbers(cpf: string) {
+  const baseSeed = hashString(cpf) || 1
+  const areaCodeSeed = digitsOnly(cpf).slice(0, 2) || '11'
+  return [0, 1].map((offset) => buildPhoneNumber(baseSeed + offset * 7919, areaCodeSeed))
+}
+
+function buildWhatsappHistory(cpf: string, phone: string) {
+  const seed = hashString(`${cpf}-${phone}`) || 1
+  const customerPhrases = [
+    'Oi, preciso de ajuda.',
+    'Consegue me atualizar?',
+    'Estou com duvida sobre as parcelas.',
+    'Posso enviar o comprovante aqui?',
+    'Obrigado pelo retorno.',
+    'Quando tiver novidade me avise.',
+  ]
+  const teamPhrases = [
+    'Oi, claro! Como posso ajudar?',
+    'Estamos verificando os dados.',
+    'Pode enviar por aqui sim.',
+    'Vou registrar e retorno.',
+    'Assim que tivermos resposta, aviso.',
+    'Vamos seguir com a renegociacao.',
+  ]
+  const totalMessages = 24 + (seed % 10)
+  const base = new Date(2025, (seed % 12), 1 + (seed % 20), 9, 15)
+  const stepMinutes = 18 + (seed % 12)
+  const messages = Array.from({ length: totalMessages }, (_, index) => {
+    const isCustomer = index % 2 === 0
+    const timestamp = new Date(base.getTime() + index * stepMinutes * 60000)
+    const formatted = timestamp.toISOString().slice(0, 16).replace('T', ' ')
+    const body = isCustomer
+      ? customerPhrases[index % customerPhrases.length]
+      : teamPhrases[index % teamPhrases.length]
+    return {
+      id: `wa-${seed}-${index}`,
+      author: isCustomer ? 'cliente' : 'equipe',
+      body,
+      timestamp: formatted,
+    }
+  })
+  return messages
+}
+
+function buildCallHistory(cpf: string, phones: string[]) {
+  const seed = hashString(cpf) || 1
+  const totalCalls = 3 + (seed % 4)
+  const base = new Date(2025, (seed % 12), 3 + (seed % 18), 10, 0)
+  return Array.from({ length: totalCalls }, (_, index) => {
+    const timestamp = new Date(base.getTime() + index * 36 * 60 * 60 * 1000)
+    const formatted = timestamp.toISOString().slice(0, 16).replace('T', ' ')
+    const durationSeconds = 45 + ((seed + index * 37) % 240)
+    const minutes = Math.floor(durationSeconds / 60)
+    const seconds = String(durationSeconds % 60).padStart(2, '0')
+    return {
+      id: `call-${seed}-${index}`,
+      phone: phones[index % phones.length] ?? phones[0] ?? '(11) 90000-0000',
+      timestamp: formatted,
+      duration: `${minutes}:${seconds}`,
+      status: 'gravada',
+    }
+  })
+}
+
 function buildTimelineItem(title: string, description: string, type: CustomerTimelineItem['type']) {
   const now = new Date()
   const timestamp = now.toISOString().slice(0, 16).replace('T', ' ')
@@ -363,6 +436,10 @@ export default function CustomersPage() {
   const [pixLink, setPixLink] = useState('')
   const [pixError, setPixError] = useState('')
   const [pixLoading, setPixLoading] = useState(false)
+  const [whatsappOpen, setWhatsappOpen] = useState(false)
+  const [selectedWhatsappNumber, setSelectedWhatsappNumber] = useState<string | null>(null)
+  const [showCalls, setShowCalls] = useState(false)
+  const [callsPage, setCallsPage] = useState(1)
 
   useEffect(() => {
     let isMounted = true
@@ -412,6 +489,23 @@ export default function CustomersPage() {
     const count = Math.max(0, Number(selectedCustomer.numeroCredores) || 0)
     return buildCreditorBanks(selectedCustomer.id, count)
   }, [selectedCustomer?.id, selectedCustomer?.numeroCredores])
+  const whatsappNumbers = useMemo(() => {
+    if (!selectedCustomer) return []
+    return buildWhatsappNumbers(selectedCustomer.cpf)
+  }, [selectedCustomer?.cpf])
+  const whatsappHistory = useMemo(() => {
+    if (!selectedCustomer || !selectedWhatsappNumber) return []
+    return buildWhatsappHistory(selectedCustomer.cpf, selectedWhatsappNumber)
+  }, [selectedCustomer?.cpf, selectedWhatsappNumber])
+  const callHistory = useMemo(() => {
+    if (!selectedCustomer) return []
+    return buildCallHistory(selectedCustomer.cpf, whatsappNumbers)
+  }, [selectedCustomer?.cpf, whatsappNumbers])
+  const callsPageSize = 10
+  const totalCalls = callHistory.length
+  const totalCallsPages = Math.max(1, Math.ceil(totalCalls / callsPageSize))
+  const callsSliceStart = (callsPage - 1) * callsPageSize
+  const pagedCalls = callHistory.slice(callsSliceStart, callsSliceStart + callsPageSize)
 
   useEffect(() => {
     setTimelineVisibleCount(20)
@@ -425,7 +519,22 @@ export default function CustomersPage() {
     setPixQrCode('')
     setPixLink('')
     setPixError('')
+    setWhatsappOpen(false)
+    setSelectedWhatsappNumber(null)
+    setShowCalls(false)
+    setCallsPage(1)
   }, [selectedId])
+
+  useEffect(() => {
+    if (!selectedCustomer) return
+    if (!whatsappNumbers.length) {
+      setSelectedWhatsappNumber(null)
+      return
+    }
+    setSelectedWhatsappNumber((prev) =>
+      prev && whatsappNumbers.includes(prev) ? prev : whatsappNumbers[0]
+    )
+  }, [selectedCustomer?.id, whatsappNumbers])
 
   useEffect(() => {
     customersRef.current = customers
@@ -1632,6 +1741,79 @@ export default function CustomersPage() {
                   </div>
                 )}
               </section>
+              <section className="surface-panel p-5">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
+                  <span className="h-2 w-2 rounded-full bg-accent/60" />
+                  Historico
+                </div>
+                <div className="mt-3 space-y-3 text-xs text-ink/60">
+                  <p>Consolide conversas e ligacoes do cliente.</p>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      onClick={() => setWhatsappOpen(true)}
+                      className="rounded-full bg-emerald-500 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-white"
+                    >
+                      WhatsApp
+                    </button>
+                    <button
+                      onClick={() => setShowCalls((prev) => !prev)}
+                      className="rounded-full border border-stroke bg-white px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-ink/70"
+                    >
+                      Ligacoes
+                    </button>
+                  </div>
+                  {showCalls ? (
+                    <div className="mt-3 space-y-2">
+                      {pagedCalls.map((call, index) => (
+                        <div
+                          key={call.id}
+                          className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-stroke bg-white/80 px-3 py-2 text-xs text-ink/70"
+                        >
+                          <div>
+                            <p className="font-semibold text-ink">
+                              Ligacao {callsSliceStart + index + 1}
+                            </p>
+                            <p className="text-ink/50">
+                              {call.phone} · {formatTimestamp(call.timestamp)}
+                            </p>
+                          </div>
+                          <span className="rounded-full border border-stroke px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-ink/60">
+                            {call.duration} · {call.status}
+                          </span>
+                        </div>
+                      ))}
+                      {callHistory.length === 0 ? (
+                        <p className="text-xs text-ink/50">Nenhuma ligacao registrada.</p>
+                      ) : null}
+                      {callHistory.length > 0 ? (
+                        <div className="flex flex-wrap items-center justify-between gap-2 pt-2 text-[10px] uppercase tracking-[0.2em] text-ink/50">
+                          <span>
+                            Pagina {callsPage} de {totalCallsPages} · {totalCalls} ligacoes
+                          </span>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => setCallsPage((prev) => Math.max(1, prev - 1))}
+                              disabled={callsPage === 1}
+                              className="rounded-full border border-stroke bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink/70 disabled:opacity-50"
+                            >
+                              Anterior
+                            </button>
+                            <button
+                              onClick={() =>
+                                setCallsPage((prev) => Math.min(totalCallsPages, prev + 1))
+                              }
+                              disabled={callsPage === totalCallsPages}
+                              className="rounded-full border border-stroke bg-white px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-ink/70 disabled:opacity-50"
+                            >
+                              Proxima
+                            </button>
+                          </div>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
+              </section>
             </div>
           </div>
         ) : null}
@@ -1718,6 +1900,76 @@ export default function CustomersPage() {
                 </div>
               </div>
             ) : null}
+          </div>
+        ) : null}
+      </Modal>
+
+      <Modal
+        open={whatsappOpen}
+        title="Historico WhatsApp"
+        onClose={() => setWhatsappOpen(false)}
+        size="lg"
+      >
+        {selectedCustomer ? (
+          <div className="space-y-4">
+            <div className="rounded-2xl border border-stroke bg-white/80 p-4 text-sm text-ink/70">
+              <p className="text-xs uppercase tracking-[0.2em] text-ink/50">Cliente</p>
+              <p className="mt-2 font-semibold text-ink">{selectedCustomer.nome}</p>
+              <p className="text-xs text-ink/50">{selectedCustomer.cpf}</p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-[0.9fr_1.6fr]">
+              <div className="rounded-2xl border border-stroke bg-white/90 p-4">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink/50">
+                  Numeros do WhatsApp
+                </p>
+                <div className="mt-3 space-y-2 text-xs">
+                  {whatsappNumbers.map((phone) => (
+                    <button
+                      key={phone}
+                      onClick={() => setSelectedWhatsappNumber(phone)}
+                      className={`w-full rounded-xl border px-3 py-2 text-left ${
+                        phone === selectedWhatsappNumber
+                          ? 'border-emerald-300 bg-emerald-50 text-emerald-700'
+                          : 'border-stroke bg-white text-ink/70'
+                      }`}
+                    >
+                      {phone}
+                    </button>
+                  ))}
+                  {whatsappNumbers.length === 0 ? (
+                    <p className="text-xs text-ink/50">Nenhum numero encontrado.</p>
+                  ) : null}
+                </div>
+              </div>
+              <div className="rounded-2xl border border-stroke bg-white/90 p-4">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink/50">
+                  Historico completo
+                </p>
+                <div className="mt-3 max-h-96 space-y-2 overflow-auto pr-1 text-xs">
+                  {whatsappHistory.map((message) => (
+                    <div
+                      key={message.id}
+                      className={`rounded-xl border px-3 py-2 ${
+                        message.author === 'cliente'
+                          ? 'border-stroke bg-white text-ink/70'
+                          : 'border-emerald-200 bg-emerald-50 text-emerald-700'
+                      }`}
+                    >
+                      <p className="font-semibold uppercase tracking-[0.2em] text-[10px]">
+                        {message.author === 'cliente' ? 'Cliente' : 'Equipe'}
+                      </p>
+                      <p className="mt-1">{message.body}</p>
+                      <p className="mt-2 text-[10px] uppercase tracking-[0.2em] text-ink/40">
+                        {formatTimestamp(message.timestamp)}
+                      </p>
+                    </div>
+                  ))}
+                  {whatsappHistory.length === 0 ? (
+                    <p className="text-xs text-ink/50">Selecione um numero para ver o historico.</p>
+                  ) : null}
+                </div>
+              </div>
+            </div>
           </div>
         ) : null}
       </Modal>
