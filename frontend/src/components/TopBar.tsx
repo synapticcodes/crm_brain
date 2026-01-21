@@ -102,13 +102,24 @@ export default function TopBar() {
   const unreadCount = notifications.filter((item) => !item.read).length
 
   return (
-    <div className="sticky top-0 z-40 flex flex-wrap items-center justify-between gap-4 border-b border-stroke/80 bg-white/80 px-6 py-4 shadow-soft backdrop-blur-xl">
+    <div
+      className="sticky top-0 z-40 flex flex-wrap items-center justify-between gap-4 border-b border-stroke/80 bg-white/80 px-6 py-4 shadow-soft backdrop-blur-xl"
+      data-tour="topbar"
+    >
       <div>
         <p className="text-xs uppercase tracking-[0.3em] text-ink/50">Meu Nome Ok ADM</p>
         <h1 className="text-2xl font-display text-ink">{today}</h1>
       </div>
 
       <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new Event('brain:startTour'))}
+          className="flex items-center gap-2 rounded-full border border-stroke bg-white/80 px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-ink/70"
+          data-tour="tour-trigger"
+        >
+          Tour
+        </button>
         <div className="relative" ref={notificationsRef}>
           <button
             type="button"
@@ -116,6 +127,7 @@ export default function TopBar() {
             className={`relative flex h-10 w-10 items-center justify-center rounded-full border ${
               notificationsOpen ? 'border-accent/40 bg-accent/10' : 'border-stroke bg-white/80'
             }`}
+            data-tour="notifications"
           >
             <svg
               aria-hidden="true"

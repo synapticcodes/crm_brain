@@ -10,7 +10,7 @@ export default function Sidebar() {
   const displayRole = roleLoading ? 'Carregando' : roleLabel(role)
 
   return (
-    <aside className="h-screen w-72 border-r border-stroke/80 bg-white/90 backdrop-blur-xl">
+    <aside className="h-screen w-72 border-r border-stroke/80 bg-white/90 backdrop-blur-xl" data-tour="sidebar">
       <div className="flex h-full flex-col px-6 py-8">
         <div className="flex items-center gap-3">
           <div className="grid h-11 w-11 place-items-center rounded-xl border border-accent/20 bg-accent/10 text-accent">
@@ -22,11 +22,12 @@ export default function Sidebar() {
           </div>
         </div>
 
-        <nav className="mt-10 flex-1 space-y-2">
+        <nav className="mt-10 flex-1 space-y-2" data-tour="nav-items">
           {navItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
+              data-tour={`nav-${item.path.replace('/', '')}`}
               className={({ isActive }) =>
                 [
                   'group flex items-center justify-between rounded-xl border px-4 py-3 transition-all',

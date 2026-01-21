@@ -6,7 +6,7 @@ interface PageHeaderProps {
 
 export default function PageHeader({ title, subtitle, actions }: PageHeaderProps) {
   return (
-    <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+    <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between" data-tour="page-header">
       <div>
         <h2 className="text-3xl font-semibold text-ink">{title}</h2>
         <p className="mt-3 max-w-2xl text-sm text-slate-500">{subtitle}</p>

@@ -1027,7 +1027,7 @@ export default function CustomersPage() {
         }
       />
 
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5" data-tour="customers-stats">
         {[
           {
             label: 'Total clientes',
@@ -1062,7 +1062,7 @@ export default function CustomersPage() {
         ))}
       </div>
 
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3" data-tour="customers-filters">
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
@@ -1139,7 +1139,7 @@ export default function CustomersPage() {
         ) : null}
       </div>
 
-      <div className="grid gap-3 pb-2 md:grid-cols-3 xl:grid-cols-6">
+      <div className="grid gap-3 pb-2 md:grid-cols-3 xl:grid-cols-6" data-tour="customers-kanban">
         {LANE_CONFIG.map((lane) => {
           const laneItems = grouped[lane.key] ?? []
           return (
