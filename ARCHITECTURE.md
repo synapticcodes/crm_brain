@@ -644,10 +644,6 @@ brain-private/
       {cliente_id}/
         {arquivo_id}/
           {original_filename}
-    contracts/
-      {contrato_id}/
-        {arquivo_id}/
-          {original_filename}
     legal/
       {processo_id}/
         {arquivo_id}/
@@ -661,6 +657,8 @@ brain-private/
         {arquivo_id}/
           {original_filename}
 ```
+
+Nota: contratos assinados entram como documentos anexados do cliente.
 
 ### Storage RLS Policy
 

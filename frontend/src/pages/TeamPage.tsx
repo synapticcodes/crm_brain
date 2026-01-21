@@ -396,7 +396,6 @@ export default function TeamPage() {
           >
             Enviar convite
           </button>
-          <p className="text-xs text-ink/50">Convite sera enviado via BFF no MVP real.</p>
         </div>
       </Modal>
 

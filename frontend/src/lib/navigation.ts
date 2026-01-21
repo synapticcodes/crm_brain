@@ -13,7 +13,7 @@ const navItems: NavItem[] = [
   {
     path: '/customers',
     label: 'Clientes',
-    hint: 'Kanban e contratos',
+    hint: 'Kanban e documentos',
     accentClass: 'text-accent',
     dotClass: 'bg-accent',
   },

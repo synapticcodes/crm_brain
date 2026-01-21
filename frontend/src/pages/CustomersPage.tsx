@@ -895,31 +895,43 @@ export default function CustomersPage() {
     }
   }
 
-  function handleAttachFile() {
-    if (!selectedCustomer) return
+  async function handleAttachFile(event: ChangeEvent<HTMLInputElement>) {
+    if (!selectedCustomer || !event.target.files?.length) return
+    const files = Array.from(event.target.files)
     const now = new Date()
     const timestamp = now.toISOString().slice(0, 16).replace('T', ' ')
+    const items = await Promise.all(
+      files.map(
+        (file) =>
+          new Promise<CustomerMock['files'][number]>((resolve, reject) => {
+            const reader = new FileReader()
+            reader.onload = () => {
+              resolve({
+                id: `F-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+                name: file.name,
+                type: file.type || 'application/octet-stream',
+                timestamp,
+                status: 'aprovado',
+                source: 'equipe',
+                url: typeof reader.result === 'string' ? reader.result : '',
+              })
+            }
+            reader.onerror = () => reject(reader.error)
+            reader.readAsDataURL(file)
+          })
+      )
+    )
     updateCustomer(selectedCustomer.id, (customer) => ({
       ...customer,
-      files: [
-        {
-          id: `F-${now.getTime()}`,
-          name: 'novo_arquivo.pdf',
-          type: 'pdf',
-          timestamp,
-          status: 'pendente',
-          source: 'equipe',
-          url: 'data:text/plain;charset=utf-8,Arquivo%20mock%20aprovado',
-        },
-        ...customer.files,
-      ],
-      documentosPendentes: true,
+      files: [...items, ...customer.files],
+      documentosPendentes: customer.files.some((file) => file.status === 'pendente'),
       documentosRecusados: false,
     }))
     addTimeline(
       selectedCustomer.id,
-      buildTimelineItem('Arquivo anexado', 'Arquivo incluido manualmente.', 'documento')
+      buildTimelineItem('Arquivo anexado', `${items.length} arquivo(s) anexado(s) pela equipe.`, 'documento')
     )
+    event.target.value = ''
   }
 
   function handleApproveFile(fileId: string) {
@@ -1489,6 +1501,9 @@ export default function CustomersPage() {
                             </div>
                             <p className="text-ink/50">{file.type} · {formatTimestamp(file.timestamp)}</p>
                           </div>
+                          <span className="rounded-full border border-amber-200 bg-amber-50 px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-amber-700">
+                            Cliente
+                          </span>
                           <div className="flex flex-wrap gap-2">
                             <button
                               onClick={() => setPreviewFile(file)}
@@ -1552,12 +1567,17 @@ export default function CustomersPage() {
                           <p className="font-semibold text-ink">{file.name}</p>
                           <p className="text-ink/50">{file.type} · {formatTimestamp(file.timestamp)}</p>
                         </div>
-                        <button
-                          onClick={() => setPreviewFile(file)}
-                          className="rounded-full bg-accent px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white"
-                        >
-                          ver
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-[10px] uppercase tracking-[0.2em] text-emerald-700">
+                            {file.source === 'equipe' ? 'Equipe' : 'Cliente'}
+                          </span>
+                          <button
+                            onClick={() => setPreviewFile(file)}
+                            className="rounded-full bg-accent px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white"
+                          >
+                            ver
+                          </button>
+                        </div>
                       </div>
                     ))}
                     {approvedFiles.length === 0 ? (
@@ -1566,12 +1586,15 @@ export default function CustomersPage() {
                       </div>
                     ) : null}
                   </div>
-                  <button
-                    onClick={handleAttachFile}
-                    className="w-full rounded-xl border border-stroke bg-white px-3 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-ink/70"
-                  >
+                  <label className="w-full rounded-xl border border-stroke bg-white px-3 py-2 text-center text-xs font-semibold uppercase tracking-[0.2em] text-ink/70">
                     Anexar arquivo
-                  </button>
+                    <input
+                      type="file"
+                      multiple
+                      onChange={handleAttachFile}
+                      className="hidden"
+                    />
+                  </label>
                 </div>
               </section>
 

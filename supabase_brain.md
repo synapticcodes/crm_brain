@@ -375,7 +375,7 @@ _None._
 <!-- ======================= BEGIN_TABLE: brain.clientes ======================= -->
 ## Table: `brain.clientes`
 
-**Purpose:** Base única de clientes com contrato assinado, pivô de todas as sessões.
+**Purpose:** Base unica de clientes (contrato assinado entra como documento anexado), pivo de todas as sessoes.
 
 ### Columns
 | Column | Type | Description |
@@ -394,7 +394,7 @@ _None._
 | `status_pagamento` | `enum brain.payment_status` | Aguardando, em_dia, inadimplente, cancelado |
 | `processo_super_endividamento` | `boolean` | flag jurídica |
 | `processo_rmc` | `boolean` | Flag jurídica |
-| `contrato_assinado_em` | `timestamptz` | Data de ingresso |
+| `contrato_assinado_em` | `timestamptz` | Data de assinatura registrada quando o documento e anexado |
 | `tenex_cadastrado_em` | `timestamptz` | Data de cadastro no tenex |
 | `vendedor_id` | `uuid` | Responsável comercial |
 | `created_at` | `timestamptz` | Quando foi criado |
@@ -470,7 +470,7 @@ _None._
 <!-- ======================= BEGIN_TABLE: brain.contratos ======================= -->
 ## Table: `brain.contratos`
 
-**Purpose:** Registrar cada serviço, contrato do cliente e seus anexos
+**Purpose:** Registrar cada servico/contrato do cliente e seus anexos
 
 ### Columns
 | Column | Type | Description |
@@ -484,7 +484,7 @@ _None._
 | `parcelas_qtd` | `integer` | Quantidade de parcelas |
 | `assinado_em` | `timestamptz` | Quando assinou |
 | `implantado_em` | `timestamptz` | Quando foi implantado no tenex |
-| `contrato_anexo_id` | `uuid; ref. brain.arquivos` | arquivo do contrato assinado |
+| `contrato_anexo_id` | `uuid; ref. brain.arquivos` | arquivo do contrato assinado (anexo do cliente) |
 | `audio_anexo_id` | `uuid; ref. brain.arquivos` | arquivo do áudio de confirmação |
 | `finalidade` | `enum brain.contract_finalidade` | categoria do contrato |
 | `origem_schema` | `text` | qual schema originou ex.: kidneys, heart, lungs |
@@ -515,7 +515,7 @@ _None._
 - **INDEX** `(cliente_id)`.
 
 ### Notes
-- (No additional notes.)
+- Contrato assinado e tratado como documento anexado no card do cliente; o sistema nao gera nem envia contratos.
 
 <!-- ======================== END_TABLE: brain.contratos ======================== -->
 
@@ -759,7 +759,7 @@ _None._
 | `id` | `uuid` | identificador |
 | `tenancy_id` | `uuid` | empresa dona do documento |
 | `cliente_id` | `uuid` | cliente relacionado |
-| `tipo` | `enum` | rg_frente, rg_verso, cnh, comprovante, contracheque, extrato, registrato, assinatura, audio, contrato, etc. |
+| `tipo` | `enum` | rg_frente, rg_verso, cnh, comprovante, contracheque, extrato, registrato, assinatura, audio, contrato (assinado), etc. |
 | `status` | `enum` | pendente, enviado, aprovado, rejeitado |
 | `attachment_id` | `uuid` | arquivo correspondente |
 | `verificado_por` | `uuid` | quem analisou |
@@ -1717,6 +1717,8 @@ For the MVP you have two strategies:
 - `assinatura`
 - `audio`
 - `contrato`
+
+Nota: `contrato` representa o contrato assinado anexado pelo cliente.
 
 <!-- ======================== END_ENUM: brain.doc_tipo ======================== -->
 

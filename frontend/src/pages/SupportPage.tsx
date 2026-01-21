@@ -36,10 +36,10 @@ const CHAT_TEMPLATE_STORAGE_KEY = 'brain_chat_templates'
 const initialEmailTemplates: EmailTemplate[] = [
   {
     id: 'tmpl-contrato',
-    label: 'Atualizacao de contrato',
-    subject: 'Atualizacao do contrato e proximos passos',
+    label: 'Recebimento de contrato',
+    subject: 'Recebemos o contrato assinado',
     body:
-      'Oi {nome},\n\nEstamos atualizando seu contrato para incluir as informacoes mais recentes. Por favor, revise os dados anexados e confirme se esta tudo correto.\n\nSe precisar de ajuste, responda este email.\n\nObrigado,\nEquipe Meu Nome Ok',
+      'Oi {nome},\n\nRecebemos o contrato assinado e os documentos anexados. Nossa equipe fara a validacao e, se algo estiver pendente, avisaremos por aqui.\n\nSe precisar reenviar algum arquivo, basta responder este email.\n\nObrigado,\nEquipe Meu Nome Ok',
     variables: ['nome'],
   },
   {

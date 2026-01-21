@@ -116,11 +116,12 @@ Bucket único: `brain-private`
 brain-private/
   {tenancy_id}/
     customers/{cliente_id}/{arquivo_id}/{filename}
-    contracts/{contrato_id}/{arquivo_id}/{filename}
     legal/{processo_id}/{arquivo_id}/{filename}
     chat/{thread_id}/{mensagem_id}/{filename}
     calls/{ligacao_id}/{arquivo_id}/{filename}
 ```
+
+**Nota**: contratos assinados são anexados como documentos do cliente (sem envio de contrato pelo sistema).
 
 ## Comandos Úteis
 
